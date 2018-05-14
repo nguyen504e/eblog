@@ -1,0 +1,17 @@
+{
+  "SERVER_PORT": 9001,
+  "SERVER_API_PATH": "/api",
+  "TOKEN_SECRET": "1CAQBVZV DXR6G9WZ",
+  "TOKEN_ALGORITHM": "HS256",
+  "TOKEN_EXP": "1d",
+  "LOG_LEVEL": "DEBUG",
+  "LOG_CONSOLE_ENABLE": true,
+  "LOG_CONSOLE_LEVEL": null,
+  "LOG_FILE_ENABLE": false,
+  "LOG_FILE_LEVEL": null,
+  "LOG_FILE_PATH": "./logs",
+  "DB_CONNECTION": "mongodb://localhost:27017",
+  "DB_NAME": "eblog",
+  "SEC_SALT_ROUNDS": 1,
+  "SEC_USER_CACHE_EXP": 1000
+}

@@ -1,0 +1,10 @@
+# import {Role} from './Role.graphql'
+
+type User {
+  id: Int!,
+  firstName: String,
+  lastName: String,
+  email: String!,
+  created: String!,
+  role: Role!
+}
