@@ -1,0 +1,30 @@
+[
+  {
+    "name": "AuthenticationRequiredError",
+    "message": "You must be logged in to do this",
+    "extensions": {
+      "code": "AUTH_REQUIRED"
+    }
+  },
+  {
+    "name": "UserNotFoundError",
+    "message": "No user found",
+    "extensions": {
+      "code": "USER_NOT_FOUND"
+    }
+  },
+  {
+    "name": "PermissionRequiredError",
+    "message": "You must have permission to do this",
+    "extensions": {
+      "code": "PERMISSION_REQUIRED"
+    }
+  },
+  {
+    "name": "CodeNotMatchedError",
+    "message": "Your passcode did not matched",
+    "extensions": {
+      "code": "CODE_NOT_MATCHED"
+    }
+  }
+]

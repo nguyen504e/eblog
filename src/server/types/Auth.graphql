@@ -1,4 +1,0 @@
-type Auth {
-  id: Int!
-  token: String!
-}

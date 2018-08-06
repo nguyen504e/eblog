@@ -1,6 +1,6 @@
-import { isEmpty, isFunction, keys, values } from 'lodash'
-
 import { MongoClient as DB } from 'mongodb'
+import { isEmpty, keys, values } from 'lodash'
+
 import config from './config'
 import data from './data'
 
@@ -8,6 +8,7 @@ const P = Promise
 let { DB_CONNECTION, DB_NAME } = config
 
 const models = keys(data)
+const rows = values(data)
 
 const T = {}
 const toolNames = ['dropCollection', 'toArray', 'createCollection', 'insertMany']
@@ -17,7 +18,6 @@ const listCollections = (db) => new P((rs, rj) => db.listCollections().toArray((
 
 const process = async () => {
   try {
-    const rows = await Promise.all(values(data).map((c) => (isFunction(c) ? c() : c)))
     console.log(`connect to ${DB_CONNECTION}`)
     const { db, dbs } = await connect(DB_CONNECTION, DB_NAME)
     const list = (await listCollections(db)).map(({ name }) => name)

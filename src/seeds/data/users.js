@@ -1,7 +1,9 @@
-import faker from '../faker'
-import { times, assign, find } from 'lodash'
-import bcrypt from 'bcrypt'
+import { ObjectID as ID } from 'mongodb'
+import { assign, find, times } from 'lodash'
+import { hashSync } from 'bcrypt'
+
 import config from '../config'
+import faker from '../faker'
 import roles from './roles'
 
 const { SEC_SALT_ROUNDS } = config
@@ -9,11 +11,12 @@ const { SEC_SALT_ROUNDS } = config
 const data = times(10, () => {
   const created = faker.date.past()
   return {
+    _id: new ID(),
+    created,
     email: faker.internet.email(),
     userName: faker.internet.userName(),
-    created,
     updated: faker.date.between(created, new Date()),
-    digest: faker.internet.password(),
+    digest: hashSync(faker.internet.password(), SEC_SALT_ROUNDS),
     roles: [find(roles, { name: 'PUBLIC' })._id]
   }
 })
@@ -21,19 +24,8 @@ const data = times(10, () => {
 assign(data[0], {
   email: 'npnguyen@tma.com.vn',
   userName: 'admin',
-  digest: '1',
+  digest: hashSync('1', SEC_SALT_ROUNDS),
   roles: [find(roles, { name: 'ADMIN' })._id]
 })
 
-async function generate() {
-  const tasks = data.map((user) => {
-    return bcrypt.hash(user.digest, SEC_SALT_ROUNDS).then((hash) => {
-      user.digest = hash
-      return user
-    })
-  })
-
-  return Promise.all(tasks).then(() => data)
-}
-
-export default generate()
+export default data

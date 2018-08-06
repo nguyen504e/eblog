@@ -1,0 +1,17 @@
+query AuthQuery($email: String!, $digest: String!) {
+  auth(email: $email, digest: $digest) {
+    id
+    email
+    permissions
+    token
+  }
+}
+
+query CacheAuthQuery {
+  auth {
+    id
+    email
+    permissions
+    token
+  }
+}

@@ -1,26 +1,36 @@
-import fs from 'fs'
 import pino from 'pino'
-import { multistream } from 'pino-multi-stream'
+import prettifier from 'pino-pretty'
+
 import path from 'path'
+
 import config from './config'
 
-const { LOG_PATH, LOG_CONSOLE_LEVEL, LOG_LEVEL, LOG_FILE_ENABLE } = config
+const { LOG_FILE_PATH, LOG_CONSOLE_LEVEL, LOG_LEVEL, LOG_FILE_ENABLE } = config
 
-const pretty = pino.pretty();
-pretty.pipe(process.stdout)
+let logWarapper = function() {}
 
-const streams = [{ stream: pretty.pipe(process.stdout), level: LOG_CONSOLE_LEVEL || LOG_LEVEL }];
+if (LOG_FILE_ENABLE) {
+  const logFile = pino({ level: LOG_LEVEL }, pino.extreme(path.resolve(__dirname, LOG_FILE_PATH)))
 
-if(LOG_FILE_ENABLE) {
-  streams.push({ stream: fs.createWriteStream(path.resolve(__dirname, LOG_PATH)), level: LOG_LEVEL })
+  logWarapper = function(lev, ...args) {
+    logFile[lev](args)
+  }
 }
 
-const log = pino({ level: 'debug' }, multistream(streams));
+if (_DEV_MODE_) {
+  const oldLogWrapper = logWarapper
+  const log = pino({ level: LOG_CONSOLE_LEVEL || LOG_LEVEL, prettyPrint: { levelFirst: true }, prettifier })
 
-export default log
-export const fatal = (...args) => log.fatal(args)
-export const error = (...args) => log.error(args)
-export const warn = (...args) => log.warn(args)
-export const info = (...args) => log.info(args)
-export const debug = (...args) => log.debug(args)
-export const trace = (...args) => log.trace(args)
+  logWarapper = function(lev, ...args) {
+    log[lev](args)
+    oldLogWrapper(lev, ...args)
+  }
+}
+
+export const fatal = (...args) => logWarapper('fatal', ...args)
+export const error = (...args) => logWarapper('error', ...args)
+export const warn = (...args) => logWarapper('warn', ...args)
+export const info = (...args) => logWarapper('info', ...args)
+export const debug = (...args) => logWarapper('debug', ...args)
+export const trace = (...args) => logWarapper('trace', ...args)
+export default { fatal, error, warn, info, debug, trace }

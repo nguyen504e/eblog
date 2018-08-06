@@ -1,117 +1,127 @@
-const path = require('path')
 const { ContextReplacementPlugin, DefinePlugin } = require('webpack')
-const packageConfig = require('./package.json')
+const eslintFormatter = require('eslint-formatter-pretty')
+
 const exclude = [/node_modules/]
 const normalizeValue = (availableValues, value) => (availableValues.includes(value) ? value : availableValues[0])
+const path = require('path')
+const packageConfig = require('./package.json')
 
-/* eslint-disable no-process-env */
-const mode = normalizeValue(['development', 'production'], process.env.MODE)
-const target = normalizeValue(['web', 'node'], process.env.TARGET)
-const module = normalizeValue(['static', 'server', 'seeds'], process.env.MODULE)
-/* eslint-enable no-process-env */
+const MODE = normalizeValue(['production', 'development'], process.env.MODE)
+const MODULE = normalizeValue(['web', 'server', 'seeds'], process.env.MODULE)
 
+let TARGET = null
+switch (MODULE) {
+  case 'web':
+    TARGET = 'web'
+    break
+  default:
+    TARGET = 'node'
+    break
+}
+
+process.env.BABEL_ENV = MODE
+process.env.BROWSERSLIST_ENV = MODE
+
+const _TIME_STAMP_ = new Date().getTime()
+
+const isDev = MODE === 'development'
 const CONST = {
-  _TIME_STAMP_: new Date().getTime(),
-  _PACKAGE_NAME_: `"${packageConfig.name}"`,
+  _TIME_STAMP_,
+  _PACKAGE_NAME_: `${packageConfig.name}`,
+  _CACHE_VERSION_: isDev ? 1 : _TIME_STAMP_,
   _DEV_MODE_: isDev
 }
 
-const isDev = mode === 'development'
+const eslintLoader = { loader: 'eslint-loader', options: { formatter: eslintFormatter, cache: true } }
+// const ractiveLoader = './loaders/ractive-router-loader'
+const babelLoader = { loader: 'babel-loader', options: { comments: false } }
 
-const babelLoader = {
-  loader: 'babel-loader',
-
-  options: {
-    presets: [['@babel/preset-env', { target: { browsers: 'last 1 Chrome versions' }, modules: false }]],
-    plugins: [
-      '@babel/plugin-transform-runtime',
-      ['@babel/plugin-proposal-decorators', { legacy: true }],
-      ['@babel/plugin-proposal-class-properties', { loose: true }],
-      'lodash'
-    ]
-    // plugins: ['transform-decorators', ['transform-class-properties', { loose: true }], 'lodash'],
-    // presets: [['@babel/env', { targets: { browsers: ['last 1 Chrome versions'] }, modules: false }]]
+const outDir = { development: 'temp', production: 'dist' }
+const commonConfig = {
+  mode: MODE,
+  target: TARGET,
+  entry: [`./src/${MODULE}/index.js`],
+  output: {
+    path: path.resolve(__dirname, `./${outDir[MODE]}/${MODULE}`),
+    filename: `[name]${isDev ? '' : '.[hash]'}.js`,
+    publicPath: '/'
+  },
+  watchOptions: { aggregateTimeout: 1500, poll: true, ignored: exclude },
+  module: {
+    rules: [{ test: /\.js$/, exclude, use: babelLoader }]
+  },
+  node: {
+    __dirname: false,
+    __filename: false
+  },
+  // devtool: isDev ? 'cheap-source-map' : 'source-map',
+  plugins: [new DefinePlugin(CONST)],
+  externals: TARGET === 'node' ? [require('webpack-node-externals')()] : undefined,
+  optimization: {
+    splitChunks: {
+      chunks: 'all'
+    }
   }
 }
-const eslintLoader = { loader: 'eslint-loader', options: { cache: true } }
-const propertiesLoader = ['json-loader', 'java-properties-loader']
-const ractiveLoader = ['./loaders/ractive-loader']
-const plugins = [new DefinePlugin(CONST)]
 
-const rules = [
-  { test: /\.js$/, exclude, enforce: 'pre', use: eslintLoader },
-  { test: /\.properties$/, use: propertiesLoader },
-  { test: /\.mustache/, use: ractiveLoader }
-]
-
-const outDir = {
-  development: '.tmp',
-  production: 'dist'
+if (!isDev) {
+  commonConfig.module.rules.unshift({ test: /\.js$/, exclude, enforce: 'pre', use: eslintLoader })
 }
 
-const commonConfig = {
-  mode,
-  target,
-  plugins,
-  entry: `./src/${module}/index.js`,
-  output: { path: path.resolve(__dirname, `./${outDir[mode]}/${module}`), filename: `[name]${isDev ? '' : '.[hash]'}.js` },
-  watchOptions: { aggregateTimeout: 300, poll: true, ignored: exclude },
-  module: { rules },
-  devtool: isDev ? 'cheap-source-map' : undefined,
-  externals: target === 'node' ? [require('webpack-node-externals')()] : undefined
-}
-
-switch (module) {
-  case 'static':
-    {
-      const ExtractTextPlugin = require('extract-text-webpack-plugin')
-      const extractSassPlugin = new ExtractTextPlugin({ filename: '[name].[contenthash].css' })
-      const cssLoader = { loader: 'css-loader', options: { minimize: !isDev } }
-      const extractSassLoader = extractSassPlugin.extract({ use: [cssLoader, 'sass-loader'], fallback: 'style-loader' })
-      const HtmlWebpackPlugin = require('html-webpack-plugin')
-      const LodashModuleReplacementPlugin = require('lodash-webpack-plugin')
-
-      rules.push(
-        { test: /\.js$/, exclude, use: babelLoader },
-        { test: /\.html$/, use: 'html-minify-loader' },
-        { test: /\.worker\.js$/, exclude, use: 'worker-loader' },
-        { test: /\.woff2($|\?)|\.svg($|\?)/, use: 'file-loader' },
-        { test: /\.properties$/, use: propertiesLoader },
-        { test: /\.scss$/, use: extractSassLoader }
-      )
-
-      plugins.push(
-        extractSassPlugin,
-        new ContextReplacementPlugin([/moment[/\\]locale$/, /en$/]),
-        new HtmlWebpackPlugin({ title: 'EBLOG [DEV]', TIME_STAMP: CONST._TIME_STAMP_ }),
-        new LodashModuleReplacementPlugin({
-          shorthands: true,
-          cloning: true,
-          currying: true,
-          caching: true,
-          collections: true,
-          exotics: true,
-          guards: true,
-          metadata: true,
-          deburring: true,
-          unicode: true,
-          chaining: true,
-          memoizing: true,
-          coercions: true,
-          flattening: true,
-          paths: true,
-          placeholders: true
-        })
-      )
+if (MODULE === 'web') {
+  const title = `${CONST._PACKAGE_NAME_.toUpperCase()} ${isDev ? '[DEV]' : ''}`
+  const cssLoader = { loader: 'css-loader', options: { minimize: !isDev } }
+  const HtmlWebpackPlugin = require('html-webpack-plugin')
+  const LodashModuleReplacementPlugin = require('lodash-webpack-plugin')
+  const StyleLintPlugin = require('stylelint-webpack-plugin')
+  const styleUseableLoader = { loader: 'style-loader/useable', options: { singleton: true } }
+  const styleLoader = [styleUseableLoader, 'css-loader', 'resolve-url-loader', 'sass-loader']
+  const fileLoader = { loader: 'file-loader', options: { name: `assets/[${isDev ? 'name' : 'hash'}].[ext]` } }
+  const htmlLoader = {
+    loader: 'html-loader',
+    options: {
+      minimize: isDev,
+      caseSensitive: true,
+      keepClosingSlash: true,
+      removeAttributeQuotes: false,
+      removeComments: true,
+      removeEmptyAttributes: true,
+      ignoreCustomFragments: [/\{\{#[^}]+\}\}/, /\{\{\/[^}]+\}\}/]
     }
+  }
 
-    break
-  case 'server':
-    rules.push({ test: /\.graphql$/, exclude, use: 'graphql-import-loader' })
-    break
-  case 'seeds':
-    break
-  default:
+  commonConfig.module.rules.push(
+    { test: /\.worker\.js$/, exclude, use: 'worker-loader' },
+    { test: /\.(woff|woff2|eot|ttf|svg)($|\?)/, use: fileLoader },
+    { test: /template\.html$/, use: htmlLoader },
+    { test: /index\.scss$/, use: styleLoader },
+    { test: /css\.scss$/, use: [cssLoader, 'sass-loader'] },
+    { test: /\.graphql/, use: ['graphql-tag/loader'] }
+  )
+
+  commonConfig.plugins.push(
+    new StyleLintPlugin({ failOnError: !isDev }),
+    new ContextReplacementPlugin([/moment[/\\]locale$/, /en$/]),
+    new HtmlWebpackPlugin({ title, TIME_STAMP: CONST._TIME_STAMP_ }),
+    new LodashModuleReplacementPlugin({
+      shorthands: true,
+      cloning: true,
+      currying: true,
+      caching: true,
+      collections: true,
+      exotics: true,
+      guards: true,
+      metadata: true,
+      deburring: true,
+      unicode: true,
+      chaining: true,
+      memoizing: true,
+      coercions: true,
+      flattening: true,
+      paths: true,
+      placeholders: true
+    })
+  )
 }
 
 module.exports = commonConfig

@@ -1,0 +1,64 @@
+<div class="d-flex justify-content-center py-5">
+  <div class="col-10 col-sm-12 col-md-9 col-lg-8 col-xl-7">
+    <div class="card-group">
+      {{#if _isLogin()}}
+        <div class="card p-4">
+          <div class="card-body">
+          <h2>{{__("You're already login!")}}</h2>
+          <a href="/" class="btn btn-primary">{{__('Back to home >>')}}</a>
+          </div>
+        </div>
+      {{else}}
+      <div class="card p-4">
+        <div class="card-body">
+          <h1>{{__('Login')}}</h1>
+          <p class="text-muted">{{__('Sign In to your account')}}</p>
+          <div class="input-group mb-3">
+            <div class="input-group-prepend">
+              <span class="input-group-text">
+                <i class="icon-user"></i>
+              </span>
+            </div>
+            <input class="form-control" placeholder="{{__('Email')}}" type="text" value="{{email}}" />
+          </div>
+          <div class="input-group mb-4">
+            <div class="input-group-prepend">
+              <span class="input-group-text">
+                <i class="icon-lock"></i>
+              </span>
+            </div>
+            <input class="form-control" placeholder="{{__('Password')}}" type="password" value="{{digest}}" />
+          </div>
+          {{# error}}
+          <div class="alert alert-danger" role="alert">
+            {{# error.isUserNotFoundError}}{{__('Incorrect username')}}{{/}}
+            {{# error.isCodeNotMatchedError}}{{__('Incorrect password')}}{{/}}
+          </div>
+          {{/}}
+          <div class="row">
+            <div class="col-6">
+              <button class="btn btn-primary px-4" type="button" on-click="@.onLogin()">{{__('Login')}}</button>
+            </div>
+            <div class="col-6 text-right">
+              <button class="btn btn-link px-0" type="button">{{__('Forgot password?')}}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card text-white py-4 px-4 px-sm-0 d-md-down-12 bg-dark">
+        <div class="card-body">
+          <div>
+            <h2 class="text-primary text-left text-md-center">{{__('Sign up')}}</h2>
+            <div class="d-flex text-center flex-column">
+              <button class="btn mt-2 btn-facebook" type="button">{{__('Facebook')}}</button>
+              <button class="btn mt-2 btn-twitter" type="button">{{__('Twitter')}}</button>
+              <button class="btn mt-2 btn-google" type="button">{{__('Google')}}</button>
+              <button class="btn mt-4 btn-secondary" type="button">{{__('Register Now!')}}</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    {{/if}}
+    </div>
+  </div>
+</div>
