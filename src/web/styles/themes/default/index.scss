@@ -1,0 +1,23 @@
+@import './varaiables.scss';
+
+$brand-colors: (
+  facebook: #3b5998,
+  google: #d85040,
+  twitter: #0084b4
+);
+
+@each $color, $value in $brand-colors {
+  .btn-#{$color} {
+    @include button-variant($value, $value);
+  }
+}
+
+html,
+body {
+  height: 100%;
+}
+
+.rendering {
+  font-family: Redacted, sans-serif;
+  color: #e2e2e2;
+}

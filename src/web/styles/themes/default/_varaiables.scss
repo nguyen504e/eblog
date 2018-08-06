@@ -1,0 +1,63 @@
+/*!
+* Wireframe Pingendo template (https://templates.pingendo.com)
+* Based on: Bootstrap v4.0.0 (https://getbootstrap.com)
+* Copyright 2014-2018 Pingendo (https://pingendo.com)
+*/
+
+// Options
+//
+// Quickly modify global styling by enabling or disabling optional features.
+
+$enable-rounded: false;
+$enable-shadows: true;
+$enable-transitions: true;
+$enable-hover-media-query: false;
+$enable-grid-classes: true;
+$enable-print-styles: true;
+
+// Variables
+//
+// Colors
+
+$theme-colors: (
+  primary: #cdcdcd,
+  secondary: #b0b0b0,
+  light: #eaeaea,
+  dark: #555555,
+  info: #8e8e8e,
+  success: #28a745,
+  warning: #ffc107,
+  danger: #dc3545
+);
+
+$body-bg: white;
+$body-color: #333;
+
+$body-color-inverse: invert($body-color) !default;
+$link-color: #8e8e8e;
+
+// Fonts
+$font-family-base: Iosevka, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif,
+  'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+$headings-font-family: $font-family-base;
+$display-font-family: $font-family-base;
+$font-weight-normal: 200;
+$headings-font-weight: 200;
+$lead-font-size: 1.3rem;
+
+$spacer: 1.5rem;
+$redacted-font-path: '../../assets/fonts';
+
+@font-face {
+  font-family: 'Redacted';
+  src: url('#{$redacted-font-path}/redacted-regular.eot');
+  src: url('#{$redacted-font-path}/redacted-regular.woff2') format('woff2'),
+    url('#{$redacted-font-path}/redacted-regular.woff') format('woff');
+}
+
+$fa-font-path: '~@fortawesome/fontawesome-free/webfonts';
+@import '~@fortawesome/fontawesome-free/scss/solid.scss';
+@import '~@fortawesome/fontawesome-free/scss/regular.scss';
+@import '~@fortawesome/fontawesome-free/scss/fontawesome.scss';
+
+@import '~bootstrap/scss/bootstrap';
