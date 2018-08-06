@@ -1,4 +1,0 @@
-type Query {
-  user(user: User!): User
-  users(user: User!): [User]
-}

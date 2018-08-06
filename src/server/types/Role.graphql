@@ -1,4 +1,0 @@
-type Role {
-  name: String!,
-  permissions: [String]
-}

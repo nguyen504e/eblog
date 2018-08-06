@@ -1,43 +1,41 @@
+import { ApolloServer } from 'apollo-server-koa'
 import Koa from 'koa'
-import KoaRouter from 'koa-router'
 import KoaBody from 'koa-bodyparser'
-import { graphqlKoa, graphiqlKoa } from 'apollo-server-koa'
-import { makeExecutableSchema } from 'graphql-tools'
-import resolvers from './resolver'
-import typeDefs from './schema.graphql'
 import jwt from 'koa-jwt'
 
-import db from './service/db'
-import models from './models'
+import { info, error } from './log'
 import config from './config'
-import { info } from './log'
+import db from './service/db'
+import memory from './service/memory'
+import schema from './schema'
 
-const { port, secret, apiPath } = config
-
+const { SERVER_PORT, TOKEN_SECRET } = config
 const app = new Koa()
+const server = new ApolloServer({ schema, debug: _DEV_MODE_, context: (context, next) => ({ context, next }) })
+
+app.on('error', (e) => error(e))
+app.use(async (ctx, next) => {
+  try {
+    await next()
+  } catch (err) {
+    error(err)
+  }
+})
+
 app.use(KoaBody())
+app.use(jwt({ secret: TOKEN_SECRET, passthrough: true }))
+server.applyMiddleware({ app })
 
-// Middleware below this line is only reached if JWT token is valid
-app.use(jwt({ secret, passthrough: true }))
+db.start().then(() => {
+  info('DB connected')
+  app.listen(SERVER_PORT)
+})
 
-let schema = makeExecutableSchema({ typeDefs, resolvers })
-const router = new KoaRouter()
-router.post(apiPath, graphqlKoa({ schema }))
-
-if (_DEV_MODE_) {
-  router.get(apiPath, graphiqlKoa({ endpointURL: apiPath }))
-}
-
-app.use(router.routes())
-app.use(router.allowedMethods())
-
-models.connect().then(() => {
-  process.on('SIGINT', () => {
-    db.disconnect().then(() => {
-      info('Mongodb disconnected on app termination')
-      process.exit(0)
-    })
+process.on('SIGINT', () => {
+  memory.forEach((mem) => mem.end(true))
+  db.stop().then(() => {
+    console.log('\n')
+    info('Mongodb disconnected on app termination')
+    process.exit(0)
   })
-
-  app.listen(port)
 })

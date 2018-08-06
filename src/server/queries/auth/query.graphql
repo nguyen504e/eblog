@@ -1,5 +1,0 @@
-#import Auth from './types/Auth.graphql'
-
-type Query {
-  auth(email: String!, digest: String!): Auth
-}
